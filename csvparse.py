@@ -31,7 +31,7 @@ class MainClass:
 				else:
 					continue  # skip one loop iteration
 				poke_str = self.poksy[int(item[2])-1][:-1]
-				if wanted_pokemon and poke_str != wanted_pokemon:
+				if wanted_pokemon != '' and poke_str != wanted_pokemon:
 					continue
 				if poke_str not in poke_dict:
 					poke_dict[poke_str] = 0
@@ -57,8 +57,15 @@ class MainClass:
 		place_array.append(disappear_str)
 
 		if place_array[2]:
-			if int(poke_dict[wanted_pokemon]) >= nest:
-				return place_array
+			if wanted_pokemon:
+				if int(poke_dict[wanted_pokemon]) >= nest:
+					return place_array
+			else:
+				total = 0
+				for key, item in poke_dict.iteritems():
+					total += int(item)
+				if total >= nest:
+					return place_array
 		
 		return None
 
