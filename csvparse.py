@@ -1,6 +1,7 @@
 import csv
 import datetime
 import argparse
+import sqlite3
 
 
 class MainClass:
@@ -31,7 +32,11 @@ class MainClass:
 				else:
 					continue  # skip one loop iteration
 				poke_str = self.poksy[int(item[2])-1][:-1]
-				if wanted_pokemon != '' and poke_str != wanted_pokemon:
+				if (
+					wanted_pokemon != '' and
+					str(wanted_pokemon) not in 
+					(poke_str, item[2])
+					):
 					continue
 				if poke_str not in poke_dict:
 					poke_dict[poke_str] = 0
@@ -58,8 +63,13 @@ class MainClass:
 
 		if place_array[2]:
 			if wanted_pokemon:
-				if int(poke_dict[wanted_pokemon]) >= nest:
-					return place_array
+				if not wanted_pokemon.isdigit():
+					if int(poke_dict[wanted_pokemon]) >= nest:
+						return place_array
+				else:
+					poke_str = self.poksy[int(wanted_pokemon)-1][:-1]
+					if int(poke_dict[poke_str]) >= nest:
+						return place_array
 			else:
 				total = 0
 				for key, item in poke_dict.iteritems():
@@ -70,7 +80,19 @@ class MainClass:
 		return None
 
 	def parse_csv(self, filename):
-		csvfile = open(filename, 'rb')
+		if '.db' in filename:
+			conn = sqlite3.connect(filename)
+			cursor = conn.cursor()
+			cursor.execute("select * from pokemon;")
+			new_filename = filename.split('.')[0]+'csv.csv'
+			with open(new_filename, "wb") as csv_file:
+				csv_writer = csv.writer(csv_file)
+				csv_writer.writerow([i[0] for i in cursor.description]) # write headers
+				csv_writer.writerows(cursor)
+			csvfile = open(new_filename, 'rb')
+		else:
+			csvfile = open(filename)
+
 		reader = csv.reader(csvfile, delimiter=',')
 		csvarray = []
 		for row in reader:
@@ -106,7 +128,7 @@ class InputHandler:
 		)
 		self.parser.add_argument(
 			"-t", "--type",
-			help="Output only certain pokemon, for ex. Zubat.",
+			help="Output only certain pokemon, for ex. Zubat or 143.",
 			default=""
 		)
 
