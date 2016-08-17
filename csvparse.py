@@ -32,12 +32,14 @@ class MainClass:
 				else:
 					continue  # skip one loop iteration
 				poke_str = self.poksy[int(item[2])-1][:-1]
-				if (
-					wanted_pokemon != '' and
-					str(wanted_pokemon) not in 
-					(poke_str, item[2])
-					):
-					continue
+				if wanted_pokemon not in ('', []):
+					isin = False
+					for poke in wanted_pokemon:
+						if str(poke) in (poke_str, item[2]):
+							isin = True
+					if not isin:
+						continue
+
 				if poke_str not in poke_dict:
 					poke_dict[poke_str] = 0
 				poke_dict[poke_str] += 1
@@ -63,13 +65,20 @@ class MainClass:
 
 		if place_array[2]:
 			if wanted_pokemon:
-				if not wanted_pokemon.isdigit():
-					if int(poke_dict[wanted_pokemon]) >= nest:
-						return place_array
-				else:
-					poke_str = self.poksy[int(wanted_pokemon)-1][:-1]
-					if int(poke_dict[poke_str]) >= nest:
-						return place_array
+				total_poke = 0
+				for poke in wanted_pokemon:
+					if poke.isdigit():
+						poke_str = self.poksy[int(wanted_pokemon)-1][:-1]
+					else:
+						poke_str = poke
+
+					try:
+						total_poke += int(poke_dict[poke_str])
+					except KeyError:
+						pass
+
+				if total_poke >= nest:
+					return place_array
 			else:
 				total = 0
 				for key, item in poke_dict.iteritems():
@@ -129,7 +138,8 @@ class InputHandler:
 		self.parser.add_argument(
 			"-t", "--type",
 			help="Output only certain pokemon, for ex. Zubat or 143.",
-			default=""
+			default="",
+			nargs="*"
 		)
 
 	def parse_args(self):
@@ -146,7 +156,7 @@ class MainRunner:
 		_output = args.output
 		_type = args.type
 		if _output == 'pokemon.csv' and _type:
-			_output = _type+'.csv'
+			_output = ' '.join(_type)+'.csv'
 		_nest = args.nest
 
  		dict_ = self.mainclass.parse_csv(_input)
