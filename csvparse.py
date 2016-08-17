@@ -15,7 +15,7 @@ class MainClass:
 		date_object = date_object - datetime.timedelta(minutes=15)
 		return date_object.strftime('%H:%M:%S')
 
-	def parse_pokemon(self, place, wanted_pokemon='', nest=0):
+	def parse_pokemon(self, place, wanted_pokemon=[], nest=0, omit=[]):
 		place_array = []
 		place_array.append(place[0][0])
 		place_array.append(place[0][1])
@@ -37,6 +37,14 @@ class MainClass:
 					for poke in wanted_pokemon:
 						if str(poke) in (poke_str, item[2]):
 							isin = True
+					if not isin:
+						continue
+
+				if omit not in ('', []):
+					isin = True
+					for poke in omit:
+						if str(poke) in (poke_str, item[2]):
+							isin = False
 					if not isin:
 						continue
 
@@ -129,7 +137,7 @@ class InputHandler:
 			"-o", "--output",
 			help="The output csv file, defaults to pokemon.csv.",
 			default="pokemon.csv"
-			)
+		)
 		self.parser.add_argument(
 			"-n", "--nest",
 			help="Output only nests with specified amount of pokemon.",
@@ -138,6 +146,12 @@ class InputHandler:
 		self.parser.add_argument(
 			"-t", "--type",
 			help="Output only certain pokemon, for ex. Zubat or 143.",
+			default="",
+			nargs="*"
+		)
+		self.parser.add_argument(
+			"-x", "--omit",
+			help="Omit certain pokemon, for ex. Zubat or 143.",
 			default="",
 			nargs="*"
 		)
@@ -155,6 +169,7 @@ class MainRunner:
 		_input = args.input
 		_output = args.output
 		_type = args.type
+		_omit = args.omit
 		if _output == 'pokemon.csv' and _type:
 			_output = ' '.join(_type)+'.csv'
 		_nest = args.nest
@@ -163,7 +178,7 @@ class MainRunner:
 		sorted_dict = [['latitude', 'longitude', 'pokemon', 'appear_times', 'disappear_times']]
 		for useless, place in dict_.iteritems():
 			place_array = self.mainclass.parse_pokemon(
-				place, wanted_pokemon=_type, nest=_nest
+				place, wanted_pokemon=_type, nest=_nest, omit=_omit
 			)
 			if place_array:
 				sorted_dict.append(place_array)
